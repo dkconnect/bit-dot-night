@@ -4,36 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bit Dot Night</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <div class="header-container">
-        <div class="top-left-buttons">
-            <a href="https://github.com/dkconnect/bit-city" target="_blank" class="icon-button">
-                <i class="fab fa-github"></i>
-            </a>
-            <a href="Bit_Dot_Night_Paper__Correction_.pdf" class="icon-button">
-                <i class="fas fa-book"></i> </a>
-        </div>
-        <h1 class="text-3xl md:text-4xl font-bold text-purple-400">Bit Dot Night</h1>
-        <div class="spacer"></div> </div>
-
-    <div class="main-content">
-        <canvas id="pixelArtCanvas"></canvas>
-        <div class="right-buttons">
-            <button id="downloadBtn" class="action-icon-button"><i class="fas fa-download"></i></button>
-            <button id="generateBtn" class="action-icon-button"><i class="fas fa-redo-alt"></i></button>
-        </div>
+<div class="header-container">
+    <div class="top-left-buttons">
+        <a href="https://github.com/dkconnect/bit-city" target="_blank" class="icon-button">GH</a>
     </div>
 
-    <footer class="footer-text">
-        COPYRIGHT | 2025 | LUCIFER
-    </footer>
+    <h1 class="text-3xl md:text-4xl font-bold text-purple-400">Bit Dot Night</h1>
 
-    <script src="script.js"></script>
+    <div class="spacer"></div>
+</div>
+
+<div class="controls">
+    <input id="seedInput" placeholder="Enter fxhash seed..." />
+    <button id="generateBtn">Generate</button>
+    <button id="downloadBtn">Download</button>
+</div>
+
+<div id="traitsPanel"></div>
+
+<div class="main-content">
+    <canvas id="pixelArtCanvas"></canvas>
+</div>
+
+<footer class="footer-text">
+    COPYRIGHT | 2026 | LUCIFER
+</footer>
+
+<script src="script.js"></script>
 </body>
 </html>
