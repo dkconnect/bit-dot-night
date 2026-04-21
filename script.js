@@ -271,6 +271,6 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 generator.startGeneration();
 
 window.addEventListener('resize', () => {
-    generator.compositeImage(); 
+    generator.startGeneration();
 });
 
