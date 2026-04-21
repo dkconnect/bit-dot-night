@@ -1,274 +1,208 @@
 'use strict';
 
-let alphabet = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
-var fxhash = "oo" + Array(49).fill(0).map(_=>alphabet[(Math.random()*alphabet.length)|0]).join('')
-let b58dec = str=>[...str].reduce((p,c)=>p*alphabet.length+alphabet.indexOf(c)|0, 0)
-let fxhashTrunc = fxhash.slice(2)
-let regex = new RegExp(".{" + ((fxhash.length/4)|0) + "}", 'g')
-let hashes = fxhashTrunc.match(regex).map(h => b58dec(h))
-let sfc32 = (a, b, c, d) => {
-    return () => {
-        a |= 0; b |= 0; c |= 0; d |= 0
-        var t = (a + b | 0) + d | 0
-        d = d + 1 | 0
-        a = b ^ b >>> 9
-        b = c + (c << 3) | 0
-        c = c << 21 | c >>> 11
-        c = c + t | 0
-        return (t >>> 0) / 4294967296
-    }
+// ------------------ SEED SYSTEM ------------------
+
+let alphabet = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
+
+function generateFxhash() {
+    return "oo" + Array(49).fill(0).map(_ =>
+        alphabet[(Math.random() * alphabet.length) | 0]
+    ).join('');
 }
-var fxrand = sfc32(...hashes)
+
+let fxhash = generateFxhash();
+
+let b58dec = str => [...str].reduce((p, c) =>
+    p * alphabet.length + alphabet.indexOf(c) | 0, 0);
+
+let fxhashTrunc, hashes, fxrand;
+
+function rebuildSeed() {
+    fxhashTrunc = fxhash.slice(2);
+    let regex = new RegExp(".{" + ((fxhash.length / 4) | 0) + "}", 'g');
+    hashes = fxhashTrunc.match(regex).map(h => b58dec(h));
+    fxrand = sfc32(...hashes);
+}
+
+let sfc32 = (a, b, c, d) => () => {
+    a |= 0; b |= 0; c |= 0; d |= 0;
+    let t = (a + b | 0) + d | 0;
+    d = d + 1 | 0;
+    a = b ^ b >>> 9;
+    b = c + (c << 3) | 0;
+    c = c << 21 | c >>> 11;
+    c = c + t | 0;
+    return (t >>> 0) / 4294967296;
+};
+
+// ------------------ RANDOM CLASS ------------------
 
 class Random {
-    constructor(seed) { this.setSeed(seed); }
-    setSeed(seed) { this.seed = seed|0; }
-    float(a=1, b=0) { // xorshift
-        this.seed ^= this.seed << 13;
-        this.seed ^= this.seed >>> 17;
-        this.seed ^= this.seed << 5;
-        return b + (a-b) * Math.abs(this.seed % 1e9) / 1e9;
-    }
-    floatSign(a, b) { return this.float(a,b) * this.sign(); }
-    int(a=1, b=0) { return this.float(a, b)|0; }
-    bool(chance = .5) { return this.float() < chance; }
-    sign() { return this.bool() ? -1 : 1; }
-    angle(p=1) { return this.float(Math.PI*2*p); }
+    constructor(seed) { this.setSeed(seed); }
+    setSeed(seed) { this.seed = seed | 0; }
+
+    float(a = 1, b = 0) {
+        this.seed ^= this.seed << 13;
+        this.seed ^= this.seed >>> 17;
+        this.seed ^= this.seed << 5;
+        return b + (a - b) * Math.abs(this.seed % 1e9) / 1e9;
+    }
+
+    int(a = 1, b = 0) { return this.float(a, b) | 0; }
+    bool(chance = .5) { return this.float() < chance; }
 }
-const random = new Random(fxrand()*1e9); 
+
+let random;
+
+// ------------------ UTILS ------------------
 
 const PI = Math.PI;
-const mod = (a, b = 1) => ((a % b) + b) % b;
-const clamp = (v, min = 0, max = 1) => v < min ? min : v > max ? max : v;
-const hsl = (h = 0, s = 0, l = 0, a = 1) => 
-    `hsla(${mod(h) * 360},${clamp(s) * 100}%,${clamp(l) * 100}%,${clamp(a)})`;
+
+const hsl = (h, s, l, a = 1) =>
+    `hsla(${(h % 1) * 360},${s * 100}%,${l * 100}%,${a})`;
+
+// ------------------ ART GENERATOR ------------------
 
 class ArtGenerator {
-    constructor(mainCanvas) {
-        this.mainCanvas = mainCanvas;
-        this.mainContext = mainCanvas.getContext('2d');
-        this.offscreenCanvas = document.createElement('canvas');
-        this.offscreenContext = this.offscreenCanvas.getContext('2d');
-        this.animationFrameId = null;
-        this.frame = 0;
-        this.params = {};
-    }
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
 
-    static applyOperator(operator, x, y, seedX, seedY) {
-        const X = x + seedX;
-        const Y = y + seedY;
+        this.offscreen = document.createElement('canvas');
+        this.offctx = this.offscreen.getContext('2d');
 
-        switch (operator) {
-            case 0: return X & Y; // Bitwise AND
-            case 1: return X | Y; // Bitwise OR
-            case 2: return X ^ Y; // Bitwise XOR
-            case 3: return X + Y; // Addition
-            case 4: return X * Y; // Multiplication
-            case 5: return X / Y + Y / X; // Division/Reciprocal
-            case 6: return (X - Y) ^ (X + Y); // Complex bitwise
-            default: return 0;
-        }
-    }
+        this.buildingCanvas = document.createElement('canvas');
+        this.buildingCtx = this.buildingCanvas.getContext('2d');
 
-    setupParameters() {
-        const p = this.params;
-        const operatorTypes = ['&', '|', '^', '+', '*', '/', '-^+'];
+        this.frame = 0;
 
-        this.offscreenCanvas.width = 4096;
-        this.offscreenCanvas.height = 2048;
+        this.resizeCanvas();
+    }
 
-        p.windowOperatorType = random.int(operatorTypes.length);
-        p.backgroundOperatorType = random.int(operatorTypes.length);
-        p.startScale = random.int(5, 9);
+    resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
 
-        p.moonCount = random.int(1, 4);
-        if (random.bool(.05)) p.moonCount = random.int(30, 60);
-        if (random.bool(.04)) p.moonCount = 0;
-        p.bigMoon = random.bool(.05) && p.moonCount !== 0;
+        this.canvas.width = window.innerWidth * 0.75 * dpr;
+        this.canvas.height = window.innerHeight * 0.7 * dpr;
 
-        p.brightBuildings = random.bool(.05);
-        p.isInverted = random.bool(.04);
-        p.earthquake = random.bool(.04);
-        p.thinBuildings = random.bool(.03);
-        p.isGrayscale = random.bool(.1);
-        p.isRainbow = !p.isGrayscale && random.bool(.03);
-        p.shiftHue = !p.isRainbow && !p.isGrayscale && random.bool(.1);
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this.ctx.scale(dpr, dpr);
+    }
 
-        p.extraHueOffset = p.shiftHue ? .5 : p.isRainbow ? random.float() : 0;
-        p.neonHue = random.float();
-        p.windowHueOffset = random.float(0, .15);
-        p.foreSat = random.float(p.isRainbow ? .4 : .1, 1);
-        
+    setup() {
+        this.params = {
+            moonCount: random.int(1, 4),
+            isRainbow: random.bool(0.1),
+            isGrayscale: random.bool(0.1),
+            earthquake: random.bool(0.05),
+            thinBuildings: random.bool(0.2)
+        };
 
-        p.seedX = random.int(1e3);
-        p.seedY = random.int(1e3);
-        p.roomsPerSecond = random.float(2, 3);
-        p.startY = random.float(99, 400);
-    }
+        this.offscreen.width = 2048;
+        this.offscreen.height = 1024;
+    }
 
-    drawSky() {
-        const p = this.params;
-        const ctx = this.offscreenContext;
-        
-        
-        const bgHueInt = random.int(50, 100);
-        const bgStartBright = random.float(0, .2);
-        const bgSat = random.float(.2, .9);
-        const hueOffset = random.float(.4, .75);
-        const backBright = random.float(200, 600);
-        const backBrightHue = random.int(500, 2e3);
-        const scale = random.int(8, 33); 
-        const w = Math.ceil(this.offscreenCanvas.width / scale);
-        const h = Math.ceil(this.offscreenCanvas.height / scale);
-        let seedScale = random.int(1e6);
+    updateTraitsUI() {
+        const p = this.params;
+        document.getElementById('traitsPanel').innerHTML = `
+            Moon Count: ${p.moonCount}<br>
+            Rainbow: ${p.isRainbow}<br>
+            Grayscale: ${p.isGrayscale}<br>
+            Earthquake: ${p.earthquake}<br>
+            Thin Buildings: ${p.thinBuildings}
+        `;
+    }
 
-        for (let k = w * h; k--;) {
-            const i = k % w, j = k / w | 0;
-            const o = ArtGenerator.applyOperator(p.backgroundOperatorType, i, j, p.seedX, p.seedY);
-            const bright = Math.cos(o * seedScale);
-            const hue = bright * bgHueInt;
+    drawSky() {
+        const ctx = this.offctx;
 
-            ctx.fillStyle = hsl(
-                p.extraHueOffset + hueOffset + hue / 800 + j / (p.isRainbow ? 100 : 300),
-                bgSat + hue / 1800,
-                bgStartBright + hue / backBrightHue + j / backBright
-            );
-            ctx.fillRect(i * scale, j * scale, scale, scale);
-        }
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, this.offscreen.width, this.offscreen.height);
 
-        ctx.save();
-        ctx.globalCompositeOperation = 'difference'; 
-        ctx.fillStyle = '#fff'; 
-        for (let i = p.moonCount; i--;) {
-            const m = 99; 
-            const r = p.bigMoon ? random.float(500, 700) : random.float(150, 300); 
-            const x = random.float(m * 2 + r, this.offscreenCanvas.width - m * 2 - r);
-            const y = random.float(m + r, m + r + 300);
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2); 
-            ctx.fill();
-        }
-        ctx.restore();
-    }
+        // stars
+        for (let i = 0; i < 300; i++) {
+            let x = random.float(0, this.offscreen.width);
+            let y = random.float(0, this.offscreen.height);
+            ctx.fillStyle = "white";
+            ctx.fillRect(x, y, 2, 2);
+        }
+    }
 
-    drawBuilding() {
-        const p = this.params;
-        const ctx = this.offscreenContext;
-        const FPS = 60;
-        const t = this.frame / FPS;
+    generateBuildings() {
+        const ctx = this.buildingCtx;
+        const p = this.params;
 
-        const roomsWide = p.thinBuildings ? random.int(1, 4) : random.int(5, 12);
-        const Y = p.startY + (t * 60) * 7 * roomsWide / p.roomsPerSecond;
+        this.buildingCanvas.width = this.offscreen.width;
+        this.buildingCanvas.height = this.offscreen.height;
 
-        if (Y > this.offscreenCanvas.height + 500) { 
-            cancelAnimationFrame(this.animationFrameId); 
-            return;
-        }
+        for (let i = 0; i < 1000; i++) {
+            let x = random.float(0, this.buildingCanvas.width);
+            let h = random.float(50, 400);
 
-        ctx.save();
-        if (p.earthquake) {
-            ctx.translate(this.offscreenCanvas.width / 2, this.offscreenCanvas.height / 2);
-            ctx.rotate(random.floatSign(.1));
-            ctx.translate(-this.offscreenCanvas.width / 2, -this.offscreenCanvas.height / 2);
-        }
+            ctx.fillStyle = hsl(random.float(), 1, 0.5);
+            ctx.fillRect(x, this.buildingCanvas.height - h, 20, h);
+        }
+    }
 
-        const X = random.float(-200, this.offscreenCanvas.width + 200); 
-        const w = roomsWide * 2 + 1; 
-        const seedScale = random.int(1e6); 
-        const scale = p.startScale + t * 10 | 0;
+    draw() {
+        this.offctx.clearRect(0, 0, this.offscreen.width, this.offscreen.height);
 
-        for (let k = 1e4; k--;) {
-            const i = k % w, j = k / w | 0; 
-            const o = ArtGenerator.applyOperator(p.windowOperatorType, i, j, p.seedX, p.seedY); 
-            const bright = Math.cos(o * seedScale); 
+        this.drawSky();
 
-            let h = p.windowHueOffset - j * .001 + bright * (.15 - p.windowHueOffset) + (p.isRainbow ? t : 0);
-            let s = p.foreSat + random.floatSign(.1);
-            let l = bright;
+        let y = (this.frame * 2) % this.offscreen.height;
+        this.offctx.drawImage(this.buildingCanvas, 0, y);
 
-            if (i * j % 2 == 0 && !p.brightBuildings) l = s = 0;
-            
-            const rectScale = scale + (p.earthquake ? random.float(0, 5) : 0);
+        this.ctx.drawImage(this.offscreen, 0, 0, this.canvas.width, this.canvas.height);
 
-            ctx.fillStyle = hsl(h + p.extraHueOffset, s, l); 
-            ctx.fillRect(i * scale + X | 0, j * scale + Y | 0, rectScale, rectScale);
-        }
-        ctx.restore();
-    }
+        this.frame++;
+        requestAnimationFrame(() => this.draw());
+    }
 
-    compositeImage() {
-        const p = this.params;
-        const ctx = this.mainContext;
+    start() {
+        this.frame = 0;
+        this.setup();
+        this.updateTraitsUI();
+        this.generateBuildings();
+        this.draw();
+    }
 
-        const t = this.frame / 60;
-        this.mainCanvas.style.boxShadow = `0px 0px 50px ${10 + 5 * Math.sin(t * PI / 2)}px ` +
-            hsl((p.isRainbow ? t / 60 : 0) + p.neonHue, 1, p.isGrayscale ? 1 : .5);
-
-        this.mainCanvas.width = this.mainCanvas.width;
-        ctx.drawImage(this.offscreenCanvas, 0, 0, this.mainCanvas.width, this.mainCanvas.height);
-
-        if (p.isGrayscale) {
-            ctx.save();
-            ctx.fillStyle = '#fff';
-            ctx.globalCompositeOperation = 'saturation';
-            ctx.fillRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-            ctx.restore();
-        }
-        if (p.isInverted) {
-            ctx.save();
-            ctx.fillStyle = '#fff';
-            ctx.globalCompositeOperation = 'difference';
-            ctx.fillRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-            ctx.restore();
-        }
-    }
-
-    update = () => {
-        this.drawBuilding();
-        this.compositeImage();
-        this.frame++;
-        this.animationFrameId = requestAnimationFrame(this.update);
-    }
-
-    startGeneration() {
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-        }
-        this.frame = 0;
-        this.setupParameters();
-        this.drawSky();
-        this.animationFrameId = requestAnimationFrame(this.update);
-    }
-
-    download() {
-        const dataURL = this.offscreenCanvas.toDataURL('image/png'); 
-        const a = document.createElement('a');
-        a.href = dataURL;
-
-        const date = new Date();
-        const filename = `bit-dot-city-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}${String(date.getSeconds()).padStart(2, '0')}.png`;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
+    download() {
+        const a = document.createElement('a');
+        a.href = this.offscreen.toDataURL();
+        a.download = `bit-dot-${fxhash}.png`;
+        a.click();
+    }
 }
 
-const mainCanvas = document.getElementById('pixelArtCanvas');
-const generator = new ArtGenerator(mainCanvas);
+// ------------------ INIT ------------------
 
-document.getElementById('generateBtn').addEventListener('click', () => {
-    random.setSeed(fxrand() * 1e9); 
-    generator.startGeneration();
-});
+rebuildSeed();
+random = new Random(fxrand() * 1e9);
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
-    generator.download();
-});
+const canvas = document.getElementById('pixelArtCanvas');
+const generator = new ArtGenerator(canvas);
 
+generator.start();
 
-generator.startGeneration();
+// ------------------ EVENTS ------------------
+
+document.getElementById('generateBtn').onclick = () => {
+    const input = document.getElementById('seedInput').value.trim();
+
+    fxhash = input || generateFxhash();
+
+    rebuildSeed();
+    random = new Random(fxrand() * 1e9);
+
+    console.log("Seed:", fxhash);
+
+    generator.start();
+};
+
+document.getElementById('downloadBtn').onclick = () => {
+    generator.download();
+};
 
 window.addEventListener('resize', () => {
-    generator.compositeImage(); 
+    generator.resizeCanvas();
 });
