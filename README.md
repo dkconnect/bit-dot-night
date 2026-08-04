@@ -3,7 +3,7 @@
 # Bit Dot Night
 ### *Bitwise Generative Systems for Emergent Architectural Visualization*
 
-[![Paper](https://img.shields.io/badge/Research_Paper-PDF-purple?style=for-the-badge&logo=adobeacrobatreader)](Bit_Dot_Night_Paper__Correction_.pdf)
+[![Paper](https://img.shields.io/badge/Research_Paper-PDF-purple?style=for-the-badge&logo=adobeacrobatreader)](https://github.com/dkconnect/bit-dot-night/blob/main/Bit%20Dot%20Night%20Rev%20-%20JULY.pdf)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel)](https://bit-city.vercel.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
