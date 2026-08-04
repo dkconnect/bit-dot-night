@@ -46,24 +46,24 @@ An infinite, animated 2D procedural cityscape generated purely from discrete **b
 
 ### Generated Output
 
-![Bit Dot Night Output](bit-dot-city-20250713-201426.png)
+![Bit Dot Night Output](images/bit-dot-city-20250713-201426.png)
 
 ### Trait Taxonomy
 
 <table width="100%" align="center">
   <tr>
     <td align="center" width="33%">
-      <img src="bit-dot-city-20250713-200212.png" alt="Grayscale Palette" width="100%"/>
+      <img src="images/bit-dot-city-20250713-200212.png" alt="Grayscale Palette" width="100%"/>
       <br>
       <sub><b>Monochrome Palette</b></sub>
     </td>
     <td align="center" width="33%">
-      <img src="bit-dot-city-20250713-201438.png" alt="Rainbow Palette" width="100%"/>
+      <img src="images/bit-dot-city-20250713-201438.png" alt="Rainbow Palette" width="100%"/>
       <br>
       <sub><b>Rainbow Spectrum Shift</b></sub>
     </td>
     <td align="center" width="33%">
-      <img src="bit-dot-city-20250713-200218.png" alt="Custom Palette" width="100%"/>
+      <img src="images/bit-dot-city-20250713-200218.png" alt="Custom Palette" width="100%"/>
       <br>
       <sub><b>High-Contrast Neon Sky</b></sub>
     </td>
