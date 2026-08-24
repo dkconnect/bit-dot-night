@@ -1,41 +1,46 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bit Dot Night</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="header-container">
-        <div class="top-left-buttons">
-            <a href="https://github.com/dkconnect/bit-city" target="_blank" class="icon-button">
+    <header class="header-container">
+        <div class="top-nav-buttons">
+            <a href="https://github.com/dkconnect/bit-dot-night" target="_blank" rel="noopener noreferrer" class="icon-button" title="GitHub Repository">
                 <i class="fab fa-github"></i>
             </a>
-            <a href="Bit Dot Night Rev - JULY.pdf" class="icon-button">
-                <i class="fas fa-book"></i> </a>
+            <a href="Bit Dot Night Rev - JULY.pdf" target="_blank" class="icon-button" title="Research Paper">
+                <i class="fas fa-book"></i>
+            </a>
         </div>
-        <h1 class="text-3xl md:text-4xl font-bold text-purple-400">Bit Dot Night</h1>
-        <div class="spacer"></div> </div>
+        <h1>Bit Dot Night</h1>
+        <div class="spacer"></div>
+    </header>
 
-    <div class="main-content">
-        <canvas id="pixelArtCanvas"></canvas>
-        <div class="right-buttons">
-            <button id="downloadBtn" class="action-icon-button"><i class="fas fa-download"></i></button>
-            <button id="generateBtn" class="action-icon-button"><i class="fas fa-redo-alt"></i></button>
+    <main class="main-content">
+        <div class="canvas-wrapper">
+            <canvas id="pixelArtCanvas"></canvas>
         </div>
-    </div>
+        <div class="action-buttons">
+            <button id="downloadBtn" class="action-icon-button" title="Download Image">
+                <i class="fas fa-download"></i>
+            </button>
+            <button id="generateBtn" class="action-icon-button" title="Generate New">
+                <i class="fas fa-redo-alt"></i>
+            </button>
+        </div>
+    </main>
 
     <footer class="footer-text">
-        COPYRIGHT | 2025 | LUCIFER
+        COPYRIGHT | 2026 | DIBYANSHU
     </footer>
 
     <script src="script.js"></script>
 </body>
 </html>
-
