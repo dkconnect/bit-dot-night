@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/HEADER.png">
-  <img src="images/HEADER.png" width="540" alt="Bit Dot Night Logo"/>
+  <img src="HEADER.png" width="540" alt="Bit Dot Night Logo"/>
 </picture>
 
 # Bit Dot Night
@@ -40,7 +40,7 @@
 
 > *Strip away Perlin noise fields, hand-drawn vector assets, and procedural grammar trees, and what remains is the algebraic structure of integer arithmetic and bitwise logic evaluated over a 2D coordinate lattice. **That emergent morphology is what we generate.** Not random noise: a deterministic, infinite architectural skyline emerging directly from low-level binary interactions.*
 
-[![Bit Dot Night Skyline Output](images/bit-dot-city-20250713-201426.png)](https://bit-city.vercel.app/)
+[![Bit Dot Night Skyline Output](result_images/FrontPage.png)](https://bit-city.vercel.app/)
 
 **One click, zero build steps:** Open `index.html` or visit the [Live Demo](https://bit-city.vercel.app/) — an interactive, 60 FPS dual-canvas procedural world engine featuring:
 
