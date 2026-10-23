@@ -1,0 +1,7 @@
+Operator,Shannon Entropy H (bits),Entropy Std,Spectral Decay (β),Moran's I (Clustering)
+AND  (x & y),5.4812,0.2689,2.305,0.3138
+OR   (x | y),5.5249,0.1938,2.301,0.4342
+XOR  (x ^ y),5.7104,0.0697,1.576,0.095
+ADD  (x + y),5.691,0.2409,2.738,0.1765
+MULTIPLY (x * y),5.7223,0.0006,-0.006,-0.0019
+HYBRID (x−y)⊕(x+y),5.7009,0.0783,1.889,0.3122
